@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<module>
+    <id>paknic</id>
+    <name>Paknic Domain Registration</name>
+    <description>Registers new Plesk domains through the Paknic Reseller API when they are still available.</description>
+    <category>dns</category>
+    <url>https://paknic.com</url>
+    <version>2.0.0</version>
+    <release>1</release>
+    <vendor>Paknic</vendor>
+    <plesk_min_version>18.0.0</plesk_min_version>
+</module>

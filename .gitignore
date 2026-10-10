@@ -1,0 +1,17 @@
+# Build outputs
+dist/
+**/lib/paknic-sdk/
+build.ps1
+pack_tar.py
+
+# Dependencies and caches
+sdk-php/vendor/
+sdk-php/composer.lock
+.phpunit.result.cache
+.bin/
+
+# Local configs & logs
+data/config.json
+data/*.log
+whm_config.json
+.env

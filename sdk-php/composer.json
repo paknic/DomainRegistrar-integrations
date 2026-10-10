@@ -1,0 +1,30 @@
+{
+    "name": "paknic/php-sdk",
+    "description": "Official PHP SDK for Paknic Reseller & Automation API",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Paknic Team",
+            "email": "support@paknic.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5 || ^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DomainRegistrar\\SDK\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DomainRegistrar\\SDK\\Tests\\": "tests/"
+        }
+    }
+}

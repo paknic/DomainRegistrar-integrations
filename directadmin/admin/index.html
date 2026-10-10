@@ -1,0 +1,93 @@
+#!/usr/local/bin/php -q
+<?php
+/**
+ * Paknic settings page (DirectAdmin > Admin > Extra Features > Paknic Domain Registration).
+ * DirectAdmin runs this as diradmin and passes form data in the POST environment variable.
+ */
+
+require_once __DIR__ . '/../lib/paknic-sdk/autoload.php';
+
+use DomainRegistrar\SDK\Client;
+use DomainRegistrar\SDK\Configuration;
+
+$configFile = __DIR__ . '/../data/config.json';
+$settings = is_readable($configFile) ? (json_decode((string)file_get_contents($configFile), true) ?: []) : [];
+
+$text = ['api_key', 'api_url', 'only_tlds', 'years', 'nameservers'];
+$flags = ['auto_register', 'auto_renew', 'whois_privacy', 'dns_management'];
+$registrantLabels = [
+    'first_name' => 'First name', 'last_name' => 'Last name', 'organization' => 'Organization',
+    'address1' => 'Address', 'address2' => 'Address line 2', 'city' => 'City', 'state' => 'State / province',
+    'postal_code' => 'Postal code', 'country_code' => 'Country code (2 letters)',
+    'email' => 'Email (used when the user has none)', 'phone' => 'Phone (+CC.NUMBER)',
+];
+
+function h($value): string
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+$message = '';
+$post = [];
+parse_str((string)getenv('POST'), $post);
+if (!empty($post['save'])) {
+    foreach ($text as $name) {
+        $settings[$name] = trim((string)($post[$name] ?? ''));
+    }
+    foreach ($flags as $name) {
+        $settings[$name] = !empty($post[$name]) ? '1' : '0';
+    }
+    foreach (array_keys($registrantLabels) as $field) {
+        $settings['registrant_' . $field] = trim((string)($post['registrant_' . $field] ?? ''));
+    }
+    if (trim((string)($post['api_secret'] ?? '')) !== '') {
+        $settings['api_secret'] = trim((string)$post['api_secret']);
+    }
+    $settings['years'] = (string)min(10, max(1, (int)($settings['years'] ?: 1)));
+
+    $written = @file_put_contents($configFile, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    if ($written === false) {
+        $message = '<p style="color:#b00">Could not write ' . h($configFile) . '. Run scripts/install.sh again to fix permissions.</p>';
+    } else {
+        @chmod($configFile, 0600);
+        try {
+            $client = new Client(new Configuration($settings['api_key'], $settings['api_secret'] ?? '', $settings['api_url'] ?: Configuration::DEFAULT_BASE_URL));
+            $balance = $client->account()->getBalance();
+            $message = '<p style="color:#070">Saved. Connected: wallet balance $' . h(number_format((float)$balance['balance'], 2)) . '.</p>';
+        } catch (Exception $e) {
+            $message = '<p style="color:#b00">Saved, but the API connection failed: ' . h($e->getMessage()) . '</p>';
+        }
+    }
+}
+
+$value = function ($name, $default = '') use ($settings) {
+    return h($settings[$name] ?? $default);
+};
+$checked = function ($name, $default = '0') use ($settings) {
+    return ($settings[$name] ?? $default) === '1' ? ' checked' : '';
+};
+?>
+<h2>Paknic Domain Registration</h2>
+<p>When a domain is created in DirectAdmin and is still available, it is registered through Paknic and charged to your wallet.
+A <code>pk_test_</code> key uses the sandbox: nothing is registered or charged. Results are logged to
+<code>/usr/local/directadmin/plugins/paknic/data/paknic.log</code>.</p>
+<?php echo $message; ?>
+<form method="post" action="/CMD_PLUGINS_ADMIN/paknic/index.html">
+<input type="hidden" name="save" value="1">
+<table class="list" cellpadding="4">
+<tr><td>API Key ID</td><td><input type="text" name="api_key" size="40" value="<?php echo $value('api_key'); ?>"></td></tr>
+<tr><td>API Secret</td><td><input type="password" name="api_secret" size="40" placeholder="<?php echo empty($settings['api_secret']) ? '' : 'saved (leave empty to keep)'; ?>"></td></tr>
+<tr><td>API Base URL</td><td><input type="text" name="api_url" size="40" value="<?php echo $value('api_url', 'https://api.paknic.com'); ?>"> host only</td></tr>
+<tr><td>Register new domains automatically</td><td><input type="checkbox" name="auto_register" value="1"<?php echo $checked('auto_register'); ?>></td></tr>
+<tr><td>Only these TLDs</td><td><input type="text" name="only_tlds" size="40" value="<?php echo $value('only_tlds'); ?>"> comma-separated; empty = all</td></tr>
+<tr><td>Registration years</td><td><input type="number" name="years" min="1" max="10" value="<?php echo $value('years', '1'); ?>"></td></tr>
+<tr><td>Auto-renew</td><td><input type="checkbox" name="auto_renew" value="1"<?php echo $checked('auto_renew', '1'); ?>></td></tr>
+<tr><td>Buy WHOIS privacy (paid add-on)</td><td><input type="checkbox" name="whois_privacy" value="1"<?php echo $checked('whois_privacy'); ?>></td></tr>
+<tr><td>Buy DNS management (paid add-on)</td><td><input type="checkbox" name="dns_management" value="1"<?php echo $checked('dns_management'); ?>></td></tr>
+<tr><td>Nameservers</td><td><input type="text" name="nameservers" size="60" value="<?php echo $value('nameservers'); ?>"> at least two, comma-separated</td></tr>
+<?php foreach ($registrantLabels as $field => $label): ?>
+<tr><td>Registrant: <?php echo h($label); ?></td><td><input type="text" name="registrant_<?php echo $field; ?>" size="40" value="<?php echo $value('registrant_' . $field); ?>"></td></tr>
+<?php endforeach; ?>
+<tr><td></td><td><input type="submit" value="Save"></td></tr>
+</table>
+</form>

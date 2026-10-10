@@ -1,0 +1,28 @@
+{
+    "api_key": "pk_test_xxxxxxxxxxxxxxxx",
+    "api_secret": "sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "api_url": "https://api.paknic.com",
+
+    "auto_register_on_account_create": false,
+    "only_tlds": [".com", ".net"],
+    "years": 1,
+    "auto_renew": true,
+    "whois_privacy": false,
+    "dns_management": false,
+
+    "default_nameservers": ["ns1.yourhostingserver.com", "ns2.yourhostingserver.com"],
+
+    "registrant": {
+        "first_name": "",
+        "last_name": "",
+        "organization": "",
+        "address1": "",
+        "address2": "",
+        "city": "",
+        "state": "",
+        "postal_code": "",
+        "country_code": "US",
+        "email": "",
+        "phone": "+1.5551234567"
+    }
+}
