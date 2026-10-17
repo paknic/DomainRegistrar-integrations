@@ -97,6 +97,14 @@ function runSdkTests(string $baseUrl): void
             TestRunner::assertEquals(10.99, (float)$pricing[0]['register_price']);
         });
 
+        TestRunner::test('TldService::lifecycle', function () use ($client) {
+            $tlds = $client->tlds()->lifecycle();
+            TestRunner::assertEquals(2, count($tlds));
+            TestRunner::assertEquals('sunsetting', $tlds[0]['status']);
+            TestRunner::assertFalse(!empty($tlds[0]['registration_open']));
+            TestRunner::assertTrue(!empty($tlds[0]['renewals_open']));
+        });
+
         TestRunner::test('DomainService::check available & taken', function () use ($client) {
             $avail = $client->domains()->check('avail-domain.com');
             TestRunner::assertTrue(!empty($avail['is_available']));

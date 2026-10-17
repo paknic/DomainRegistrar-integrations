@@ -1,17 +1,20 @@
-# Build outputs
-dist/
+# Build output of build.ps1: the SDK bundled into each plugin, and the install zips.
 **/lib/paknic-sdk/
-build.ps1
-pack_tar.py
-
-# Dependencies and caches
+dist/
 sdk-php/vendor/
 sdk-php/composer.lock
 .phpunit.result.cache
-.bin/
+# Build scripts & internal tools
+build.ps1
+pack_tar.py
 
 # Local configs & logs
 data/config.json
 data/*.log
 whm_config.json
-.env
+
+# Dependencies, caches, and test outputs
+.bin/
+.phpunit.result.cache
+sdk-php/vendor/
+sdk-php/composer.lock

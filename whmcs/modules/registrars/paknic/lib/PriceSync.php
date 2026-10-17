@@ -96,6 +96,51 @@ final class PriceSync
     }
 
     /**
+     * What a TLD from GET /api/v1/tlds/lifecycle means for WHMCS pricing: the price types to stop offering
+     * (set to -1 for every term) and a line for the sync report. Registration and transfer stop together when
+     * registration closes; renewal stops when renewals close.
+     *
+     * @return array{close: string[], note: string}
+     */
+    public static function lifecycleRule(array $entry): array
+    {
+        $close = [];
+        if (empty($entry['registration_open'])) {
+            $close[] = 'domainregister';
+            $close[] = 'domaintransfer';
+        }
+        if (empty($entry['renewals_open'])) {
+            $close[] = 'domainrenew';
+        }
+
+        $status = (string)($entry['status'] ?? 'unknown');
+        $date = static function ($value): ?string {
+            if (empty($value)) {
+                return null;
+            }
+            $ts = strtotime((string)$value);
+            return $ts === false ? null : gmdate('Y-m-d', $ts);
+        };
+        $parts = [$status];
+        if ($d = $date($entry['no_renewals_after'] ?? null)) {
+            $parts[] = "last renewal {$d}";
+        }
+        if ($d = $date($entry['retire_at'] ?? null)) {
+            $parts[] = "retires {$d}";
+        }
+        $note = implode(', ', $parts) . '; '
+            . ($close === [] ? 'nothing closed' : 'not offered: ' . implode(', ', array_map(
+                static fn ($t) => substr($t, strlen('domain')), $close)));
+        return ['close' => $close, 'note' => $note];
+    }
+
+    /** Every term of a price type marked not offered. */
+    public static function notOfferedColumns(): array
+    {
+        return array_fill_keys(array_values(self::YEAR_COLUMNS), self::NOT_OFFERED);
+    }
+
+    /**
      * Converts USD column values into a WHMCS currency. WHMCS rates are relative to the default currency, so
      * USD → target is (value / usdRate) * targetRate. Rounding is re-applied after conversion.
      */
