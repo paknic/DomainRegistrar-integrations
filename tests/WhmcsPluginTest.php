@@ -55,6 +55,26 @@ function runWhmcsTests(string $baseUrl): void
             TestRunner::assertEquals(PriceSync::NOT_OFFERED, $cols['monthly']);
         });
 
+        TestRunner::test('PriceSync::lifecycleRule closes what the TLD no longer allows', function () {
+            $sunset = PriceSync::lifecycleRule([
+                'tld' => '.shop', 'status' => 'sunsetting', 'registration_open' => false, 'renewals_open' => true,
+                'no_renewals_after' => '2027-01-31T00:00:00Z', 'retire_at' => null,
+            ]);
+            TestRunner::assertEquals(['domainregister', 'domaintransfer'], $sunset['close']);
+            TestRunner::assertTrue(strpos($sunset['note'], 'last renewal 2027-01-31') !== false);
+
+            $retired = PriceSync::lifecycleRule(['tld' => '.old', 'status' => 'retired', 'registration_open' => false, 'renewals_open' => false]);
+            TestRunner::assertEquals(['domainregister', 'domaintransfer', 'domainrenew'], $retired['close']);
+
+            $paused = PriceSync::lifecycleRule(['tld' => '.p', 'status' => 'sales_paused', 'registration_open' => true, 'renewals_open' => true]);
+            TestRunner::assertEquals([], $paused['close']);
+            TestRunner::assertTrue(strpos($paused['note'], 'nothing closed') !== false);
+
+            $cols = PriceSync::notOfferedColumns();
+            TestRunner::assertEquals(10, count($cols));
+            TestRunner::assertEquals(PriceSync::NOT_OFFERED, $cols['biennially']);
+        });
+
         TestRunner::test('PriceSync::convert handles foreign currencies', function () {
             $cols = ['msetupfee' => 11.99, 'monthly' => -1.0];
             // USD rate 1.0, EUR rate 0.90 -> 11.99 * 0.90 = 10.791 -> round to .99 = 10.99

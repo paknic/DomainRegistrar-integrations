@@ -149,6 +149,31 @@ if ($uri === '/api/v1/account/transactions' && $method === 'GET') {
     ]);
 }
 
+if ($uri === '/api/v1/tlds/lifecycle' && $method === 'GET') {
+    jsonResponse(200, [
+        'success' => true,
+        'message' => '2 TLD(s) off sale or winding down.',
+        'data' => [
+            [
+                'tld' => '.shop',
+                'status' => 'sunsetting',
+                'registration_open' => false,
+                'renewals_open' => true,
+                'sunset_announced_at' => '2026-10-01T00:00:00Z',
+                'no_new_registrations_after' => '2026-10-02T00:00:00Z',
+                'no_renewals_after' => '2027-01-31T00:00:00Z',
+                'retire_at' => null
+            ],
+            [
+                'tld' => '.old',
+                'status' => 'retired',
+                'registration_open' => false,
+                'renewals_open' => false
+            ]
+        ]
+    ]);
+}
+
 if ($uri === '/api/v1/account/pricing' && $method === 'GET') {
     jsonResponse(200, [
         'success' => true,

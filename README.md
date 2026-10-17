@@ -68,6 +68,10 @@ Prebuilt, self-contained distribution archives for each platform (with the PHP S
    15 3 * * * php -q /path/to/whmcs/modules/registrars/paknic/sync.php --markup=15% --round=.99 >/dev/null 2>&1
    ```
 
+   The same run also reads the TLDs that are winding down (`GET /api/v1/tlds/lifecycle`: sales paused, sunsetting,
+   migrating, retired). For those set up in WHMCS, it marks closed prices as not offered (-1): registration and
+   transfer once registration closes, renewal after the renewal cut-off. Each is listed with its dates and logged.
+
 ### 2. HostBill
 1. Extract `paknic-hostbill.zip` into your HostBill installation root (`includes/modules/Domain/paknic/`).
 2. In HostBill Admin, go to **Settings > Modules > Domain Modules** and activate **Paknic**.

@@ -14,6 +14,7 @@ use DomainRegistrar\SDK\Services\ContactService;
 use DomainRegistrar\SDK\Services\DnsService;
 use DomainRegistrar\SDK\Services\DomainService;
 use DomainRegistrar\SDK\Services\NameserverService;
+use DomainRegistrar\SDK\Services\TldService;
 use DomainRegistrar\SDK\Services\WebhookService;
 
 class Client
@@ -26,6 +27,7 @@ class Client
     private ?AccountService $accountService = null;
     private ?WebhookService $webhookService = null;
     private ?AddonService $addonService = null;
+    private ?TldService $tldService = null;
 
     public function __construct(Configuration $config)
     {
@@ -75,6 +77,14 @@ class Client
             $this->accountService = new AccountService($this);
         }
         return $this->accountService;
+    }
+
+    public function tlds(): TldService
+    {
+        if ($this->tldService === null) {
+            $this->tldService = new TldService($this);
+        }
+        return $this->tldService;
     }
 
     public function webhooks(): WebhookService
